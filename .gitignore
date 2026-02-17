@@ -1,0 +1,78 @@
+# =========================
+# Build outputs (CMake)
+# =========================
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+install_manifest.txt
+
+# =========================
+# Binaries
+# =========================
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# =========================
+# Object files
+# =========================
+*.o
+*.obj
+*.lo
+*.slo
+
+# =========================
+# Debug / profiling
+# =========================
+*.dSYM/
+*.pdb
+*.profraw
+*.profdata
+gmon.out
+perf.data*
+vgcore.*
+
+# =========================
+# Logs / runtime files
+# =========================
+*.log
+*.pid
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CLion
+cmake-build-debug/
+cmake-build-release/
+
+# =========================
+# Python (scripts)
+# =========================
+__pycache__/
+*.pyc
+.venv/
+
+# =========================
+# Test artifacts
+# =========================
+test_output/
