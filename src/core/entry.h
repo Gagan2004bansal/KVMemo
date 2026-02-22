@@ -20,7 +20,7 @@
 
 #include <string>
 #include <cstdint>
-#include "../common/Clock.h"
+#include "../common/time.h"
 #include <utility>
 
 
@@ -44,11 +44,11 @@ namespace kvmemo::core {
          * @brief Contruct a non-expiring entry.
          */
         explicit Entry(std::string value) : value_(std::move(value)),
-                                        created_at_(common::Clock::NowMillis()),
+                                        created_at_(common::Clock::NowEpochMillis()),
                                         expire_at_(0) {}
 
         Entry(std::string value, std::uint64_t ttl_ms) : value_(std::move(value)),
-                                        created_at_(common::Clock::NowMillis()),
+                                        created_at_(common::Clock::NowEpochMillis()),
                                         expire_at_(ttl_ms == 0 ? 0 : created_at_ + ttl_ms) {}
     
 
@@ -70,7 +70,7 @@ namespace kvmemo::core {
          */
         void Update(std::string new_value, std::uint64_t ttl_ms = 0) {
             value_ = std::move(new_value);
-            created_at_ = common::Clock::NowMillis();
+            created_at_ = common::Clock::NowEpochMillis();
             expire_at_ = ttl_ms == 0 ? 0 : created_at_ + ttl_ms;
         }
 
@@ -102,7 +102,7 @@ namespace kvmemo::core {
             if(expire_at_ == 0) {
                 return false;
             }
-            return common::Clock::NowMillis() >= expire_at_;
+            return common::Clock::NowEpochMillis() >= expire_at_;
         }
 
         /**
@@ -117,7 +117,7 @@ namespace kvmemo::core {
                 return 0;
             }
 
-            const auto now = common::Clock::NowMillis();
+            const auto now = common::Clock::NowEpochMillis();
             if(now >= expire_at_) {
                 return 0;
             }
@@ -130,7 +130,7 @@ namespace kvmemo::core {
         Timestamp created_at_;
         Timestamp expire_at_;
     };
-}
+} // namespace kvmemo::core
 
 /**
  * This source code may not be copied, modified, or

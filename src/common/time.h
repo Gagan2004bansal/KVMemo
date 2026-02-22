@@ -23,7 +23,6 @@
 #include <chrono>
 #include <cstdint>
 
-using namespace std;
 
 namespace kvmemo::common {
     /**
@@ -34,7 +33,7 @@ namespace kvmemo::common {
      *  - LRU last_access timestamps
      */
 
-    using EpochMillis = uint64_t;
+    using EpochMillis = std::uint64_t;
 
     /**
      * @brief Strongly-typed alias for monotonic time points.
@@ -43,12 +42,12 @@ namespace kvmemo::common {
      *  - measuring latency
      *  - measuring durations between events
      */
-    using SteadyTimePoints = chrono::steady_clock::time_point;
+    using SteadyTimePoints = std::chrono::steady_clock::time_point;
 
     /**
      * @brief Strongly-typed alias for monotonic durations in milliseconds 
      */
-    using DurationMillis = chrono::milliseconds;
+    using DurationMillis = std::chrono::milliseconds;
 
     /**
      * @class Clock
@@ -63,18 +62,18 @@ namespace kvmemo::common {
         Clock() = delete;
 
         [[nodiscard]] static EpochMillis NowEpochMillis() noexcept {
-            const auto now = chrono::system_clock::now();
-            const auto ms = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch());
+            const auto now = std::chrono::system_clock::now();
+            const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
             return static_cast<EpochMillis>(ms.count());
         }
 
         [[nodiscard]] static SteadyTimePoints NowSteady() noexcept {
-            return chrono::steady_clock::now();
+            return std::chrono::steady_clock::now();
         }
 
         [[nodiscard]] static EpochMillis ElapsedMillis(SteadyTimePoints start, 
         SteadyTimePoints end) noexcept {
-            const auto diff = chrono::duration_cast<chrono::milliseconds>(end - start);
+            const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
             return static_cast<EpochMillis>(diff.count());
         }
     };       
