@@ -6,7 +6,7 @@
  * 
  *  This class encapsulates :
  *  - Value storage (binary safe)
- *  - Expiration timestamp (TTL support)
+ *  - Expiration Timestamp (TTL support)
  *  - Creation Timestamp
  *  - LightWeight metadata hooks
  * 
@@ -20,10 +20,9 @@
 
 #include <string>
 #include <cstdint>
-#include <atomic>
-#include "../common/time.h"
+#include "../common/Clock.h"
+#include <utility>
 
-using namespace std;
 
 namespace kvmemo::core {
 
@@ -44,13 +43,13 @@ namespace kvmemo::core {
         /**
          * @brief Contruct a non-expiring entry.
          */
-        explicit Entry(string value) : value_(move(value)),
-                                        created_at_(common::Time::NowMillis()),
+        explicit Entry(std::string value) : value_(std::move(value)),
+                                        created_at_(common::Clock::NowMillis()),
                                         expire_at_(0) {}
 
-        Entry(string value, std::uint64_t ttl_ms) : value_(move(value)),
-                                        created_at_(common::Time::NowMillis()),
-                                        expire_at(ttl_ms == 0 ? 0 : created_at_ + ttl_ms) {}
+        Entry(std::string value, std::uint64_t ttl_ms) : value_(std::move(value)),
+                                        created_at_(common::Clock::NowMillis()),
+                                        expire_at_(ttl_ms == 0 ? 0 : created_at_ + ttl_ms) {}
     
 
         Entry(const Entry&) = default;
@@ -62,16 +61,16 @@ namespace kvmemo::core {
         /**
          * @brief Returns stored value.
          */
-        const string& Value() const noexcept {
+        const std::string& Value() const noexcept {
             return value_;
         }
 
         /**
          * @brief Updates value and optionally TTL.
          */
-        void Update(string new_value, uint64_t ttl_ms = 0) {
-            value_ = move(new_value);
-            created_at_ = common::Time::NowMillis();
+        void Update(std::string new_value, std::uint64_t ttl_ms = 0) {
+            value_ = std::move(new_value);
+            created_at_ = common::Clock::NowMillis();
             expire_at_ = ttl_ms == 0 ? 0 : created_at_ + ttl_ms;
         }
 
@@ -83,14 +82,14 @@ namespace kvmemo::core {
         }
 
         /**
-         * @brief Returns expiration timestamp (0 if no TTL)
+         * @brief Returns expiration Timestamp (0 if no TTL)
          */
         Timestamp ExpireAt() const noexcept {
             return expire_at_;
         }
 
         /**
-         * @brief Returns creation timestamp.
+         * @brief Returns creation Timestamp.
          */
         Timestamp CreatedAt() const noexcept {
             return created_at_;
@@ -99,11 +98,11 @@ namespace kvmemo::core {
         /**
          * @brief Returns true if entry is expired.
          */
-        bool isExpired() const noexcept {
+        bool IsExpired() const noexcept {
             if(expire_at_ == 0) {
                 return false;
             }
-            return common::Time::NowMillis() >= expire_at_;
+            return common::Clock::NowMillis() >= expire_at_;
         }
 
         /**
@@ -113,12 +112,12 @@ namespace kvmemo::core {
          * - Remaining milliseconds otherwise
          */
 
-        uint64_t RemainingTTL() const noexcept {
+        std::uint64_t RemainingTTL() const noexcept {
             if(expire_at_ == 0) {
                 return 0;
             }
 
-            const auto now = common::Time::NowMillis();
+            const auto now = common::Clock::NowMillis();
             if(now >= expire_at_) {
                 return 0;
             }
@@ -127,10 +126,10 @@ namespace kvmemo::core {
         }
 
         private:
-        string value_;  
+        std::string value_;  
         Timestamp created_at_;
         Timestamp expire_at_;
-    }
+    };
 }
 
 /**
