@@ -25,9 +25,8 @@
 #include <list>
 #include <unordered_map>
 #include <string>
+#include <cstddef>
 #include <stdexcept>
-
-using namespace std;
 
 namespace kvmemo::core {
     /**
@@ -41,12 +40,12 @@ namespace kvmemo::core {
      */
     class LRUCache final {
         public: 
-        using Key = string;
+        using Key = std::string;
 
-        explicit LRUCache(size_t capacity) : capacity_(capacity)
+        explicit LRUCache(size_t  capacity) : capacity_(capacity)
         {
             if(capacity_ == 0){
-                throw invalid_argument("LRU capacity must be greater than zero");
+                throw std::invalid_argument("LRU capacity must be greater than zero");
             }
         }
 
@@ -99,7 +98,7 @@ namespace kvmemo::core {
          */
         const Key& EvictionCandidate() const {
             if(order_.empty()) {
-                throw runtime_error("LRUCache is empty");
+                throw std::runtime_error("LRUCache is empty");
             }
             return order_.back();
         }
@@ -109,7 +108,7 @@ namespace kvmemo::core {
          */
         Key PopEvictionCandidate() {
             if (order_.empty()) {
-                throw runtime_error("LRUCache is empty");
+                throw std::runtime_error("LRUCache is empty");
             }
 
             Key lru_key = order_.back();
@@ -143,8 +142,8 @@ namespace kvmemo::core {
         private:
         size_t capacity_;
 
-        list<Key> order_;
-        unordered_map<Key, typename list<Key>::iterator> map_;
+        std::list<Key> order_;
+        std::unordered_map<Key, typename std::list<Key>::iterator> map_;
     };
 } // namespace kvmemo::core
 
