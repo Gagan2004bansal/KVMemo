@@ -19,10 +19,11 @@
 
 #include <unordered_map>
 #include <mutex>
-#include <optional>
 #include <string>
 #include <vector>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 
 #include "entry.h"
 #include "lru_cache.h"
@@ -33,9 +34,37 @@ namespace kvmemo::core
 
     class Shard final
     {
-        public:
+    public:
         using Key = std::string;
 
+    private:
+        const std::size_t capacity_;
+        mutable std::mutex mutex_;
+
+        std::unordered_map<Key, Entry> store_;
+        LRUCache lru_;
+        TTLIndex ttl_index_;
+
+        void RemoveInternal(const Key &key)
+        {
+            store_.erase(key);
+            lru_.Remove(key);
+            ttl_index_.Remove(key);
+        }
+
+        void EvictOne()
+        {
+            if (store_.empty())
+            {
+                return;
+            }
+
+            Key victim = lru_.PopEvictionCandidate();
+            store_.erase(victim);
+            ttl_index_.Remove(victim);
+        }
+
+    public:
         explicit Shard(std::size_t capacity)
             : capacity_(capacity),
               lru_(capacity),
@@ -102,7 +131,6 @@ namespace kvmemo::core
             std::lock_guard<std::mutex> lock(mutex_);
 
             auto it = store_.find(key);
-
             if (it == store_.end())
             {
                 return std::nullopt;
@@ -150,33 +178,6 @@ namespace kvmemo::core
                 RemoveInternal(key);
             }
         }
-
-        void RemoveInternal(const Key &key)
-        {
-            store_.erase(key);
-            lru_.Remove(key);
-            ttl_index_.Remove(key);
-        }
-
-        void EvictOne()
-        {
-            if (store_.empty())
-            {
-                return;
-            }
-
-            Key victim = lru_.PopEvictionCandidate();
-            store_.erase(victim);
-            ttl_index_.Remove(victim);
-        }
-
-        private:
-            const std::size_t capacity_;
-            mutable std::mutex mutex_;
-
-            std::unordered_map<Key, Entry> store_;
-            LRUCache lru_;
-            TTLIndex ttl_index_;
     };
 } // namespace kvmemo::core
 
