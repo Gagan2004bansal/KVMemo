@@ -1,3 +1,4 @@
+#pragma once
 /**
  * @file response.h
  * @brief Represents a server response in KVMemo protocol.

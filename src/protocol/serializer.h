@@ -1,3 +1,4 @@
+#pragma once
 /**
  * @file serializer.h
  * @brief Serializes KVMemo protocol response into wire format.
