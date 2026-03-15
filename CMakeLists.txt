@@ -23,6 +23,10 @@ file(GLOB_RECURSE KVMEMO_SOURCES
     src/*.cpp
 )
 
+list(REMOVE_ITEM KVMEMO_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/client/kv_cli.cpp
+)
+
 # ---------------------------------------------------------
 # Server executable
 # ---------------------------------------------------------
