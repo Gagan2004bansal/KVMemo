@@ -6,6 +6,8 @@
  */
 #include <string>
 #include <stdexcept>
+#include <vector>
+#include <sys/select.h>
 
 #include "../net/tcp_server.h"
 #include "../protocol/framing.h"
@@ -24,16 +26,19 @@ namespace kvmemo::server
     class ServerApp final
     {
     public:
-        explicit ServerApp(int port) : server_(port), engine_(std::make_unique<core::ShardManager>(),
+        explicit ServerApp(int port) : server_(port), engine_(std::make_unique<core::ShardManager>(64, 10000),
                                                               std::make_unique<core::TTLIndex>(),
-                                                              std::make_unique<eviction::EvictionManager>()),
+                                                              std::make_unique<eviction::EvictionManager>(
+                                                                  std::make_unique<eviction::MemoryTracker>(256 * 1024 * 1024),
+                                                                  std::make_unique<eviction::LRUPolicy>(
+                                                                      std::make_unique<core::LRUCache>(10000)))),
                                        dispatcher_(engine_) {}
 
         ServerApp(const ServerApp &) = delete;
         ServerApp &operator=(const ServerApp &) = delete;
 
         ServerApp(ServerApp &&) noexcept = default;
-        ServerApp &operator=(ServerApp &&) noexcept = default;
+        ServerApp &operator=(ServerApp &&) noexcept = delete;
 
         ~ServerApp() = default;
 
@@ -46,22 +51,56 @@ namespace kvmemo::server
 
             while (true)
             {
-                server_.Accept();
                 ProcessConnections();
             }
         }
 
     private:
         /**
-         * @brief Processes requests for all active connections.
+         * @brief Accepts new connections and processes requests for all active
+         *        connections using select() for event-driven I/O.
+         *
+         *        The listening socket is included in the select() watch set so
+         *        that the loop never blocks waiting for a new connection while
+         *        existing clients are waiting for their commands to be handled.
          */
         void ProcessConnections()
         {
             auto &manager = server_.Connection();
+            fd_set readfds;
+            FD_ZERO(&readfds);
 
-            for (int fd = 0; fd < 65536; fd++)
+            int listen_fd = server_.ListenFD();
+            FD_SET(listen_fd, &readfds);
+            int max_fd = listen_fd;
+
+            active_fds_.clear();
+            manager.ForEachConnection([&](int fd, net::Connection *conn)
+                                      {
+                FD_SET(fd, &readfds);
+                max_fd = std::max(max_fd, fd);
+                active_fds_.push_back(fd); });
+
+            struct timeval tv = {0, kSelectTimeoutUs};
+            int activity = select(max_fd + 1, &readfds, nullptr, nullptr, &tv);
+
+            if (activity < 0)
+                return;
+
+            if (activity > 0)
             {
-                ConnectionSafeProcess(manager, fd);
+                if (FD_ISSET(listen_fd, &readfds))
+                {
+                    server_.Accept();
+                }
+
+                for (int fd : active_fds_)
+                {
+                    if (FD_ISSET(fd, &readfds))
+                    {
+                        ConnectionSafeProcess(manager, fd);
+                    }
+                }
             }
         }
 
@@ -104,9 +143,13 @@ namespace kvmemo::server
         }
 
     private:
+        static constexpr int kSelectTimeoutUs = 50000;
+
         Dispatcher dispatcher_;
         net::TcpServer server_;
         core::KVEngine engine_;
+
+        std::vector<int> active_fds_;
     };
 } // namespace kvmemo::server
 
