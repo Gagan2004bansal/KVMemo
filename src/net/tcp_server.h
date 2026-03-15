@@ -93,6 +93,14 @@ namespace kvmemo::net
         }
 
         /**
+         * @brief Returns the listening socket file descriptor.
+         */
+        int ListenFD() const noexcept
+        {
+            return listen_fd_;
+        }
+
+        /**
          * @brief Returns connection manager.
          */
         ConnectionManager &Connection() noexcept
