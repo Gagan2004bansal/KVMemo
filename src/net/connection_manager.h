@@ -89,6 +89,17 @@ public:
         return connections_.size();
     }
 
+    /**
+     * @brief Iterates over all active connections, invoking callback(fd, connection*).
+     */
+    template <typename Callback>
+    void ForEachConnection(Callback&& callback)
+    {
+        for (auto& [fd, conn] : connections_) {
+            callback(fd, conn.get());
+        }
+    }
+
 private:
 
     std::unordered_map<int, std::unique_ptr<Connection>> connections_;
