@@ -69,6 +69,11 @@ namespace kvmemo::server
                 return HandleDelete(request);
             }
 
+            if (cmd == "KEYS")
+            {
+                return HandleKeys(request);
+            }
+
             return protocol::Response::Error("Unknown command");
         }
 
@@ -119,6 +124,33 @@ namespace kvmemo::server
             engine_.Delete(key);
 
             return protocol::Response::Ok();
+        }
+
+        /**
+         * @brief Handles the KEYS command — returns all key:value pairs.
+         */
+        protocol::Response HandleKeys(const protocol::Request &req)
+        {
+            if (req.ArgCount() > 0)
+            {
+                return protocol::Response::Error("KEYS takes no arguments");
+            }
+
+            auto pairs = engine_.GetAllKeys();
+
+            std::string result;
+            for (const auto &[key, value] : pairs)
+            {
+                result += key + ":" + value + "\n";
+            }
+
+            // Remove trailing newline if present
+            if (!result.empty() && result.back() == '\n')
+            {
+                result.pop_back();
+            }
+
+            return protocol::Response::Ok(result);
         }
 
     private:

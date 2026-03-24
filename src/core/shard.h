@@ -164,6 +164,29 @@ namespace kvmemo::core
             return store_.size();
         }
 
+                /**
+         * @brief Retrieves all non-expired key-value pairs from this shard.
+         *
+         * @return Vector of (key, value) pairs for all live entries.
+         */
+        std::vector<std::pair<std::string, std::string>> GetAllKeys() const
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+
+            std::vector<std::pair<std::string, std::string>> result;
+            result.reserve(store_.size());
+
+            for (const auto &[key, entry] : store_)
+            {
+                if (!entry.IsExpired())
+                {
+                    result.emplace_back(key, entry.Value());
+                }
+            }
+
+            return result;
+        }
+
         /**
          * @brief Performs TTL cleanup for expired keys.
          */

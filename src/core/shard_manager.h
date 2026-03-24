@@ -85,6 +85,32 @@ namespace kvmemo::core {
         }
 
         /**
+         * @brief Retrieves all non-expired key-value pairs across all shards.
+         *
+         * @return Combined vector of (key, value) pairs from every shard.
+         */
+        std::vector<std::pair<std::string, std::string>> GetAllKeys() const {
+            std::vector<std::pair<std::string, std::string>> result;
+
+            // Collect per-shard results first to allow a single reserve
+            std::vector<std::vector<std::pair<std::string, std::string>>> per_shard;
+            per_shard.reserve(shards_.size());
+            std::size_t total = 0;
+            for (const auto& shard : shards_) {
+                per_shard.push_back(shard->GetAllKeys());
+                total += per_shard.back().size();
+            }
+
+            result.reserve(total);
+            for (auto& shard_keys : per_shard) {
+                result.insert(result.end(),
+                              std::make_move_iterator(shard_keys.begin()),
+                              std::make_move_iterator(shard_keys.end()));
+            }
+            return result;
+        }
+
+        /**
          * @brief Run TTL cleanup across all shards.
          */
         void CleanupExpired(std::uint64_t now) {

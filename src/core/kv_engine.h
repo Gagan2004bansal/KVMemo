@@ -96,6 +96,15 @@ namespace kvmemo::core {
         }
 
         /**
+         * @brief Retrieves all non-expired key-value pairs in the store.
+         *
+         * @return Vector of (key, value) pairs for every live key.
+         */
+        std::vector<std::pair<std::string, std::string>> GetAllKeys() const {
+            return shard_manager_->GetAllKeys();
+        }
+
+        /**
          * @brief Expires keys that are due.
          * Called by TTL manager thread.
          */
