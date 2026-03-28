@@ -94,6 +94,13 @@ namespace kvmemo::eviction {
             return CurrentUsage() > max_memory_bytes_;
         }
 
+        /**
+         * @brief Resets memory usage counter to zero.
+         */
+        void Reset() noexcept {
+            current_memory_bytes_.store(0, std::memory_order_relaxed);
+        }
+
     private:
         const std::size_t max_memory_bytes_;
         std::atomic<std::size_t> current_memory_bytes_;

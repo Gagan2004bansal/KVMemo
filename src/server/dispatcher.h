@@ -85,6 +85,16 @@ namespace kvmemo::server
                 return HandlePing(request);
             }
 
+            if (cmd == "FLUSH")
+            {
+                return HandleFlush(request);
+            }
+
+            if (cmd == "EXISTS")
+            {
+                return HandleExists(request);
+            }
+
             return protocol::Response::Error("Unknown command");
         }
 
@@ -209,6 +219,31 @@ namespace kvmemo::server
                 return protocol::Response::Error("PING takes no arguments");
             }
             return protocol::Response::Ok(engine_.Ping());
+        }
+
+        /**
+         * @brief Handles FLUSH — deletes all keys and resets TTL index and memory tracker.
+         */
+        protocol::Response HandleFlush(const protocol::Request &req)
+        {
+            if (req.ArgCount() > 0)
+            {
+                return protocol::Response::Error("FLUSH takes no arguments");
+            }
+            engine_.Flush();
+            return protocol::Response::Ok();
+        }
+        /**
+         * @brief Handles EXISTS — checks if a key exists (expired keys return 0).
+         */
+        protocol::Response HandleExists(const protocol::Request &req)
+        {
+            if (req.ArgCount() < 1)
+            {
+                return protocol::Response::Error("EXISTS requires key");
+            }
+            auto value = engine_.Get(req.Arg(0));
+            return protocol::Response::Ok(value.has_value() ? "1" : "0");
         }
 
     private:

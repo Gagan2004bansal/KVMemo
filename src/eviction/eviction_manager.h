@@ -39,6 +39,7 @@ class EvictionPolicy {
         virtual void OnRead(const std::string& key) = 0;
         virtual void OnWrite(const std::string& key) = 0;
         virtual void OnDelete(const std::string& key) = 0;
+        virtual void Clear() = 0;
 
     /**
      *  @brief Selects candidate key for eviction.
@@ -63,6 +64,10 @@ class LRUPolicy final : public EvictionPolicy {
 
     void OnDelete(const std::string& key) override {
         lru_->Remove(key);
+    }
+
+    void Clear() override {
+        lru_->Clear();
     }
 
     std::optional<std::string> SelectVictim() override {
@@ -117,6 +122,16 @@ class EvictionManager {
         memory_tracker_->Release(100);
         policy_->OnDelete(key);
     } 
+
+    /**
+     * @brief Resets eviction state: clears policy tracking and memory counter.
+     * Called on FLUSH.
+     */
+    void Clear() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        policy_->Clear();
+        memory_tracker_->Reset();
+    }
 
     /**
      * @brief Returns keys that must be evicted.

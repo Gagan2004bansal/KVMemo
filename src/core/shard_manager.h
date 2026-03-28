@@ -111,6 +111,15 @@ namespace kvmemo::core {
         }
 
         /**
+         * @brief Clears all key-value pairs across all shards.
+         */
+        void Clear() {
+            for (auto& shard : shards_) {
+                shard->Clear();
+            }
+        }
+
+        /**
          * @brief Run TTL cleanup across all shards.
          */
         void CleanupExpired(std::uint64_t now) {

@@ -188,6 +188,17 @@ namespace kvmemo::core
         }
 
         /**
+         * @brief Clears all keys, LRU state, and TTL tracking from this shard.
+         */
+        void Clear()
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            store_.clear();
+            lru_.Clear();
+            ttl_index_.Clear();
+        }
+
+        /**
          * @brief Performs TTL cleanup for expired keys.
          */
         void CleanupExpired(std::uint64_t now)

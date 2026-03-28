@@ -136,6 +136,15 @@ namespace kvmemo::core {
             return "PONG";
         }
 
+        /**
+         * @brief Deletes all keys. Resets TTL index and memory tracker.
+         */
+        void Flush() {
+            shard_manager_->Clear();
+            ttl_index_->Clear();
+            eviction_manager_->Clear();
+        }
+
     private:
         std::unique_ptr<ShardManager> shard_manager_;
         std::unique_ptr<TTLIndex> ttl_index_;
